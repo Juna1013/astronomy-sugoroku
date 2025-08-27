@@ -6,7 +6,7 @@ type Props = {
   label?: string;
 };
 
-export default function DiceRoller({ disabled = false, onRoll, label = "🎲 Roll Dice" }: Props) {
+export default function DiceRoller({ disabled = false, onRoll, label = "🎲 サイコロをふる" }: Props) {
   const [lastRoll, setLastRoll] = useState<number | null>(null);
 
   const roll = () => {

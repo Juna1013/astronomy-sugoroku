@@ -34,13 +34,16 @@ const demoSquares: Square[] = Array.from({ length: 24 }).map((_, i) => ({
 export default function Page() {
   const [started, setStarted] = useState(false);
   const [isPCMode, setIsPCMode] = useState(false);
-
-  // players は開始時に初期化する
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0);
   const [diceDisabled, setDiceDisabled] = useState(false);
 
-  // モード選択で初期プレイヤー配列を作る
+  // game ended & winner
+  const [gameEnded, setGameEnded] = useState(false);
+  const [winner, setWinner] = useState<Player | null>(null);
+
+  const lastIndex = demoSquares.length - 1;
+
   const initPlayers = (pcMode: boolean) => {
     if (pcMode) {
       return [
@@ -55,136 +58,222 @@ export default function Page() {
     }
   };
 
-  // Dashboard の Start ボタンの onStart で呼ばれる
   const handleStart = (pcMode: boolean = false) => {
     setIsPCMode(pcMode);
-    setPlayers(initPlayers(pcMode));
+    const initial = initPlayers(pcMode);
+    setPlayers(initial);
     setCurrentPlayerIdx(0);
     setStarted(true);
     setDiceDisabled(false);
+    setGameEnded(false);
+    setWinner(null);
   };
 
-  // サイコロを振ったときの一般処理：value を受け取り現在のプレイヤーを進める
+  // Check if any player is on goal tile; return winner Player or null
+  const checkGoal = (pl: Player[]) => {
+    const w = pl.find((p) => p.pos >= lastIndex);
+    return w ?? null;
+  };
+
+  // Move player by steps, return new players array
+  const movePlayerBy = (pl: Player[], idx: number, steps: number) => {
+    const next = pl.map((p) => ({ ...p }));
+    next[idx].pos = Math.min(next[idx].pos + steps, lastIndex); // don't wrap; reaching last ends game
+    return next;
+  };
+
+  // Apply square effect for a player index (synchronously, using a snapshot players array)
+  const applySquareEffectSync = (plSnapshot: Player[], playerIdx: number) => {
+    const player = plSnapshot[playerIdx];
+    const sq = demoSquares[player.pos];
+    let nextPlayers = plSnapshot.map((p) => ({ ...p }));
+
+    if (sq.effect?.type === 'move' && typeof sq.effect.value === 'number') {
+      nextPlayers[playerIdx].pos = Math.min(nextPlayers[playerIdx].pos + sq.effect.value, lastIndex);
+    }
+    // (拡張) 他の effect.types の処理をここに追加可能
+
+    return nextPlayers;
+  };
+
+  // When a roll occurs
   const handleRoll = (value: number) => {
-    setDiceDisabled(true); // 連打防止
-    setPlayers((prev) => {
-      const next = [...prev];
-      const p = { ...next[currentPlayerIdx] };
-      p.pos = (p.pos + value) % demoSquares.length;
-      next[currentPlayerIdx] = p;
-      return next;
-    });
+    if (diceDisabled || gameEnded || !started) return;
 
-    // マス効果（シンプル実装）：移動後に effect に応じた追加移動（例）
-    setTimeout(() => {
-      applySquareEffect(currentPlayerIdx);
-    }, 250);
+    setDiceDisabled(true);
 
-    // ターンを次に回す処理は applySquareEffect の中か、ここで行う（簡易的に遅延して次へ）
-  };
+    // compute next players immediately from current state snapshot
+    const snapshot = players.map((p) => ({ ...p }));
+    const moved = movePlayerBy(snapshot, currentPlayerIdx, value);
+    setPlayers(moved);
 
-  // マス効果を適用して次ターンへ（単純化）
-  const applySquareEffect = (playerIdx: number) => {
-    const p = players[playerIdx];
-    const square = demoSquares[p.pos];
-    if (square.effect?.type === 'move' && square.effect.value) {
-      // 例: 強制移動
-      setPlayers((prev) => {
-        const next = [...prev];
-        const pp = { ...next[playerIdx] };
-        pp.pos = (pp.pos + (square.effect?.value ?? 0)) % demoSquares.length;
-        next[playerIdx] = pp;
-        return next;
-      });
+    // check goal immediately
+    const maybeWinner = checkGoal(moved);
+    if (maybeWinner) {
+      endGame(maybeWinner);
+      return;
     }
 
-    // 次ターンへ
-    setTimeout(() => {
-      const nextIdx = (playerIdx + 1) % players.length;
-      setCurrentPlayerIdx(nextIdx);
-      setDiceDisabled(false);
+    // apply square effect synchronously (could move further)
+    const afterEffect = applySquareEffectSync(moved, currentPlayerIdx);
+    setPlayers(afterEffect);
 
-      // PC の番なら自動で振らせる
-      if (players[nextIdx]?.isPC) {
-        // 少し待ってから振る
+    // check goal again after effect
+    const maybeWinner2 = checkGoal(afterEffect);
+    if (maybeWinner2) {
+      endGame(maybeWinner2);
+      return;
+    }
+
+    // advance to next player
+    const nextIdx = (currentPlayerIdx + 1) % afterEffect.length;
+    setCurrentPlayerIdx(nextIdx);
+
+    // if next player is PC, schedule PC move
+    if (afterEffect[nextIdx]?.isPC) {
+      setTimeout(() => {
+        if (gameEnded) return;
         setDiceDisabled(true);
-        setTimeout(() => {
-          const pcRoll = Math.floor(Math.random() * 6) + 1;
-          // advance PC
-          setPlayers((prev) => {
-            const next = [...prev];
-            const pp = { ...next[nextIdx] };
-            pp.pos = (pp.pos + pcRoll) % demoSquares.length;
-            next[nextIdx] = pp;
-            return next;
-          });
-          // apply PC's square effects, then back to human
-          setTimeout(() => {
-            applySquareEffect(nextIdx);
-          }, 400);
-        }, 800);
-      }
-    }, 300);
+        const pcRoll = Math.floor(Math.random() * 6) + 1;
+        // snapshot from latest players state
+        setPlayers((prevPlayers) => {
+          const snapped = prevPlayers.map((p) => ({ ...p }));
+          const afterPc = movePlayerBy(snapped, nextIdx, pcRoll);
+          // check PC goal immediately
+          const w = checkGoal(afterPc);
+          if (w) {
+            // apply and end game
+            setPlayers(afterPc);
+            endGame(w);
+            return afterPc;
+          }
+
+          // apply PC's square effects
+          const afterPcEffect = applySquareEffectSync(afterPc, nextIdx);
+          const w2 = checkGoal(afterPcEffect);
+          setPlayers(afterPcEffect);
+          if (w2) {
+            endGame(w2);
+            return afterPcEffect;
+          }
+
+          // next turn returns to following player
+          const following = (nextIdx + 1) % afterPcEffect.length;
+          setCurrentPlayerIdx(following);
+          setDiceDisabled(false);
+          return afterPcEffect;
+        });
+      }, 800);
+    } else {
+      // human next turn: enable dice
+      setTimeout(() => {
+        if (!gameEnded) setDiceDisabled(false);
+      }, 250);
+    }
   };
 
-  // Return ボタン（ダッシュボードへ戻る）
+  const endGame = (winnerPlayer: Player) => {
+    setWinner(winnerPlayer);
+    setGameEnded(true);
+    setDiceDisabled(true);
+    // keep started true so the board stays visible; show modal/banner to user
+  };
+
   const handleReturn = () => {
+    // reset everything and go back to dashboard
     setStarted(false);
     setPlayers([]);
+    setCurrentPlayerIdx(0);
+    setGameEnded(false);
+    setWinner(null);
+    setDiceDisabled(false);
   };
 
-  // If started becomes true and first player is PC, kick off PC move automatically
+  const handlePlayAgain = () => {
+    // re-start same mode
+    handleStart(isPCMode);
+  };
+
+  // If the game just started and the first player is PC, trigger its automatic move
   useEffect(() => {
     if (!started) return;
-    if (players.length > 0 && players[0].isPC) {
-      // start with PC move
+    if (players.length > 0 && players[0].isPC && !gameEnded) {
+      // slight delay so UI shows up
       setDiceDisabled(true);
       setTimeout(() => {
+        if (gameEnded) return;
         const pcRoll = Math.floor(Math.random() * 6) + 1;
-        setPlayers((prev) => {
-          const next = [...prev];
-          next[0] = { ...next[0], pos: (next[0].pos + pcRoll) % demoSquares.length };
-          return next;
+        setPlayers((prevPlayers) => {
+          const snapped = prevPlayers.map((p) => ({ ...p }));
+          const afterPc = movePlayerBy(snapped, 0, pcRoll);
+          const w = checkGoal(afterPc);
+          if (w) {
+            setPlayers(afterPc);
+            endGame(w);
+            return afterPc;
+          }
+          const afterPcEffect = applySquareEffectSync(afterPc, 0);
+          const w2 = checkGoal(afterPcEffect);
+          setPlayers(afterPcEffect);
+          if (w2) {
+            endGame(w2);
+            return afterPcEffect;
+          }
+          // next to human
+          setCurrentPlayerIdx(1 % afterPcEffect.length);
+          setDiceDisabled(false);
+          return afterPcEffect;
         });
-        setTimeout(() => applySquareEffect(0), 300);
       }, 800);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [started, players.length]);
+  }, [started]);
 
+  // Top header: title / turn / Return button / DiceRoller aligned
   return (
     <div>
       {!started ? (
         <Dashboard onStart={handleStart} onOpenSettings={() => alert('設定ダイアログ')} />
       ) : (
         <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
-          <div className="container mx-auto py-8 px-4">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-              <h2 className="text-xl md:text-2xl font-bold">ゲーム画面</h2>
+          <div className="container mx-auto py-6 px-4">
+            {/* Top bar: title + controls */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-4">
+                <h2 className="text-xl md:text-2xl font-bold">ゲーム画面</h2>
+                <div className="text-sm text-white/80">
+                  Turn: <span className="font-semibold">{players[currentPlayerIdx]?.name ?? '—'}</span>
+                </div>
+              </div>
 
               <div className="flex items-center gap-3">
-                <div className="text-sm text-white/80">
-                  Turn: <span className="font-semibold">{players[currentPlayerIdx]?.name}</span>
+                {/* DiceRoller is shown in header; disabled state reflects whose turn it is */}
+                <div>
+                  <DiceRoller
+                    onRoll={handleRoll}
+                    disabled={(players[currentPlayerIdx]?.isPC ?? false) || diceDisabled || gameEnded}
+                    label={players[currentPlayerIdx]?.isPC ? `${players[currentPlayerIdx]?.name} のターン` : '🎲 Roll Dice'}
+                  />
                 </div>
-
-              {/* Dice area: disable if it's PC's turn */}
-              <div className="mt-6 flex flex-col items-center">
-                <DiceRoller
-                  onRoll={handleRoll}
-                  disabled={(players[currentPlayerIdx]?.isPC ?? false) || diceDisabled}
-                  label={players[currentPlayerIdx]?.isPC ? `${players[currentPlayerIdx]?.name} のターン` : '🎲 Roll Dice'}
-                />
-              </div>
 
                 <button
                   onClick={handleReturn}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow"
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow hidden sm:inline-block"
                 >
-                  Return to Dashboard
+                  ホームに戻る
+                </button>
+
+                {/* On very small screens, show a compact return button */}
+                <button
+                  onClick={handleReturn}
+                  className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow sm:hidden"
+                >
+                  戻る
                 </button>
               </div>
             </div>
 
+            {/* Board */}
             <GameBoard
               squares={demoSquares}
               players={players}
@@ -192,6 +281,32 @@ export default function Page() {
               currentPlayerId={players[currentPlayerIdx]?.id}
             />
           </div>
+
+          {/* Game over overlay/modal */}
+          {gameEnded && winner && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+              <div className="bg-white/5 backdrop-blur-md border border-white/20 rounded-xl p-6 w-[90%] max-w-lg text-center">
+                <h3 className="text-2xl font-bold mb-2 text-white">ゲーム終了 🎉</h3>
+                <p className="text-white/90 mb-4">{winner.name} がゴールしました！</p>
+
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    onClick={handleReturn}
+                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow"
+                  >
+                    ホームに戻る
+                  </button>
+
+                  <button
+                    onClick={handlePlayAgain}
+                    className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow"
+                  >
+                    もう一度遊ぶ
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -82,7 +82,7 @@ export default function GameBoard({
               key={sq.id}
               onClick={() => onSquareClick && onSquareClick(sq)}
               className="relative text-left group rounded-xl p-2 sm:p-3 min-h-[78px] sm:min-h-[96px] bg-gradient-to-br from-white/3 to-white/6 border border-white/6 shadow-sm
-                         hover:scale-[1.01] transition-transform focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        hover:scale-[1.01] transition-transform focus:outline-none focus:ring-2 focus:ring-indigo-500"
               aria-label={`${sq.name} のマス`}
             >
               {/* 上部 — アイコン + マス名 + 効果バッジ */}
