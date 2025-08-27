@@ -1,31 +1,36 @@
 import React, { useState } from "react";
 
 type Props = {
+  disabled?: boolean;
   onRoll: (value: number) => void;
+  label?: string;
 };
 
-export default function DiceRoller({ onRoll }: Props) {
+export default function DiceRoller({ disabled = false, onRoll, label = "🎲 Roll Dice" }: Props) {
   const [lastRoll, setLastRoll] = useState<number | null>(null);
 
   const roll = () => {
-    const value = Math.floor(Math.random() * 6) + 1; // 1〜6
+    if (disabled) return;
+    const value = Math.floor(Math.random() * 6) + 1;
     setLastRoll(value);
     onRoll(value);
   };
 
   return (
-    <div className="mt-6 text-center">
+    <div className="mt-6 flex flex-col items-center gap-2">
       <button
         onClick={roll}
-        className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow hover:bg-indigo-700 transition"
+        disabled={disabled}
+        className={`px-6 py-3 rounded-xl font-bold shadow transition ${
+          disabled ? "bg-gray-500 text-white cursor-not-allowed" : "bg-indigo-600 text-white hover:bg-indigo-700"
+        }`}
       >
-        🎲 Roll Dice
+        {label}
       </button>
-      {lastRoll && (
-        <div className="mt-2 text-lg font-semibold text-white">
-          出目: {lastRoll}
-        </div>
-      )}
+
+      <div className="text-sm text-white/80 min-h-[1.2rem]">
+        {lastRoll ? `出目: ${lastRoll}` : "まだ振られていません"}
+      </div>
     </div>
   );
 }
