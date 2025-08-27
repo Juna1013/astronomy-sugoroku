@@ -45,7 +45,7 @@ export const useGameState = () => {
     // サイコロアニメーション
     for (let i = 0; i < 10; i++) {
       setGameState((prev) => ({ ...prev, diceValue: rollDice() }));
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise<void>((resolve) => setTimeout(resolve, 100));
     }
 
     const finalDiceValue = rollDice();

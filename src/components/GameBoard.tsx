@@ -11,7 +11,8 @@ interface GameBoardProps {
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({ players, boardSize }) => {
-  const renderCell = (index: number): JSX.Element => {
+  // JSX.Element を削除して型推論に任せる
+  const renderCell = (index: number) => {
     const playersOnCell = players.filter((player) => player.position === index);
     const isSpecialCell = index % 5 === 0 && index !== 0;
 
