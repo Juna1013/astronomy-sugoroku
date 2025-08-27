@@ -8,7 +8,7 @@ interface DashboardProps {
 export default function Dashboard({ onStart, onOpenSettings }: DashboardProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-indigo-900 to-slate-900 text-white px-4">
-      <h1 className="text-3xl md:text-5xl font-bold mb-6">Astronomy すごろく</h1>
+      <h1 className="text-3xl md:text-5xl font-bold mb-6">宇宙すごろく</h1>
 
       <div className="w-full max-w-sm bg-white/6 backdrop-blur rounded-xl p-6 shadow-lg border border-white/10">
         <p className="text-sm text-white/80 mb-4">

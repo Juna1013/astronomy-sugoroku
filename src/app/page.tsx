@@ -167,6 +167,15 @@ export default function Page() {
                   Turn: <span className="font-semibold">{players[currentPlayerIdx]?.name}</span>
                 </div>
 
+              {/* Dice area: disable if it's PC's turn */}
+              <div className="mt-6 flex flex-col items-center">
+                <DiceRoller
+                  onRoll={handleRoll}
+                  disabled={(players[currentPlayerIdx]?.isPC ?? false) || diceDisabled}
+                  label={players[currentPlayerIdx]?.isPC ? `${players[currentPlayerIdx]?.name} のターン` : '🎲 Roll Dice'}
+                />
+              </div>
+
                 <button
                   onClick={handleReturn}
                   className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow"
@@ -182,15 +191,6 @@ export default function Page() {
               started={started}
               currentPlayerId={players[currentPlayerIdx]?.id}
             />
-
-            {/* Dice area: disable if it's PC's turn */}
-            <div className="mt-6 flex flex-col items-center">
-              <DiceRoller
-                onRoll={handleRoll}
-                disabled={(players[currentPlayerIdx]?.isPC ?? false) || diceDisabled}
-                label={players[currentPlayerIdx]?.isPC ? `${players[currentPlayerIdx]?.name} のターン` : '🎲 Roll Dice'}
-              />
-            </div>
           </div>
         </div>
       )}
