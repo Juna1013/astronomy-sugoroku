@@ -1,19 +1,17 @@
-import React, { useState } from "react";
+'use client';
+
+import React from 'react';
 
 type Props = {
   disabled?: boolean;
-  onRoll: (value: number) => void;
+  onRoll: () => void; // Changed to not pass value
   label?: string;
 };
 
 export default function DiceRoller({ disabled = false, onRoll, label = "🎲 サイコロをふる" }: Props) {
-  const [lastRoll, setLastRoll] = useState<number | null>(null);
-
   const roll = () => {
     if (disabled) return;
-    const value = Math.floor(Math.random() * 6) + 1;
-    setLastRoll(value);
-    onRoll(value);
+    onRoll(); // Value is now handled in useGameState
   };
 
   return (
@@ -27,10 +25,6 @@ export default function DiceRoller({ disabled = false, onRoll, label = "🎲 サ
       >
         {label}
       </button>
-
-      <div className="text-sm text-white/80 min-h-[1.2rem]">
-        {lastRoll ? `出目: ${lastRoll}` : "まだ振られていません"}
-      </div>
     </div>
   );
 }

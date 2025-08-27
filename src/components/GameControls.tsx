@@ -8,7 +8,7 @@ import { GameState } from '@/hooks/useGameState';
 
 interface GameControlsProps {
   gameState: GameState;
-  onRollDice: () => Promise<void>;
+  onRollDice: () => void;
   onResetGame: () => void;
 }
 
