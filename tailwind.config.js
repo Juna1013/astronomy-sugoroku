@@ -1,38 +1,39 @@
-/** @type {import('tailwindcss').Config} */
+// tailwind.config.js (抜粋: theme.extend に追加)
 module.exports = {
-  darkMode: 'class',
   content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{ts,tsx,js,jsx}',
+    './src/**/*.{ts,tsx,js,jsx}',
   ],
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#f0f9ff',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
+        space: {
+          50:  '#f6f8fb',
+          100: '#e6eaf5',
+          200: '#cdd9f0',
+          300: '#b4c8eb',
+          400: '#84a6df',
+          500: '#5672c8', // ベースブルー
+          600: '#3b4fa8',
+          700: '#2b386f', // 濃紺
+          800: '#1a2742',
+          900: '#0b1420', // ほぼ黒
         },
-        secondary: {
-          50: '#fef3c7',
-          500: '#f59e0b',
-          600: '#d97706',
-        },
-        success: '#10b981',
-        danger: '#ef4444',
-        warning: '#f59e0b',
+        nebula: {
+          // ネビュラ用のアクセントカラー
+          pink: '#ff77e9',
+          purple: '#8b5cf6',
+          cyan: '#6ee7b7',
+          gold: '#ffd166'
+        }
       },
-      animation: {
-        'bounce-slow': 'bounce 2s infinite',
-        'pulse-slow': 'pulse 3s infinite',
-        'spin-slow': 'spin 3s linear infinite',
+      boxShadow: {
+        'soft-glow': '0 6px 30px rgba(99,102,241,0.12), inset 0 -4px 18px rgba(139,92,246,0.06)'
       },
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-      },
-    },
+      borderRadius: {
+        '2xl': '1rem'
+      }
+    }
   },
-  plugins: [],
-}
+  plugins: []
+};

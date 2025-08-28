@@ -217,7 +217,7 @@ export const useGameState = () => {
     gameState,
     demoSquares,
     handleStart,
-    handleRoll, // Now parameter-less
+    handleRoll,
     handleReturn,
     handlePlayAgain,
     resetGame: handleReturn,
