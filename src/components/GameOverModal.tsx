@@ -13,9 +13,9 @@ const GameOverModal: React.FC<GameOverModalProps> = ({ winner, onReturn, onPlayA
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white/5 backdrop-blur-md border border-white/20 rounded-xl p-6 w-[90%] max-w-lg text-center">
-        <h3 className="text-2xl font-bold mb-2 text-white">ゲーム終了 🎉</h3>
-        <p className="text-white/90 mb-4">{winner.name} がゴールしました！</p>
+      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-md border border-gray-200 dark:border-white/20 rounded-xl p-6 w-[90%] max-w-lg text-center">
+        <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">ゲーム終了 🎉</h3>
+        <p className="text-gray-700 dark:text-white/90 mb-4">{winner.name} がゴールしました！</p>
 
         <div className="flex items-center justify-center gap-3">
           <button

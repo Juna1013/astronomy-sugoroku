@@ -81,7 +81,7 @@ export default function GameBoard({
             <button
               key={sq.id}
               onClick={() => onSquareClick && onSquareClick(sq)}
-              className="relative text-left group rounded-xl p-2 sm:p-3 min-h-[78px] sm:min-h-[96px] bg-gradient-to-br from-white/3 to-white/6 border border-white/6 shadow-sm
+              className="relative text-left group rounded-xl p-2 sm:p-3 min-h-[78px] sm:min-h-[96px] bg-gray-100 dark:bg-gradient-to-br dark:from-white/3 dark:to-white/6 border border-gray-200 dark:border-white/6 shadow-sm
                         hover:scale-[1.01] transition-transform focus:outline-none focus:ring-2 focus:ring-indigo-500"
               aria-label={`${sq.name} のマス`}
             >
@@ -89,23 +89,23 @@ export default function GameBoard({
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
                   <div className="text-sm sm:text-lg">{sq.icon ?? "✦"}</div>
-                  <div className="text-[12px] sm:text-sm font-medium text-white/95">{sq.name}</div>
+                  <div className="text-[12px] sm:text-sm font-medium text-gray-800 dark:text-white/95">{sq.name}</div>
                 </div>
 
                 {/* 効果バッジ（常時表示） */}
                 {sq.effect && (
                   <div
-                    className="ml-2 flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-white/10 bg-white/3"
+                    className="ml-2 flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-gray-300 dark:border-white/10 bg-gray-200 dark:bg-white/3"
                     aria-hidden={false}
                   >
-                    <div className="text-[11px] sm:text-xs font-semibold text-white">{<EffectIcon type={sq.effect.type} />}</div>
-                    <div className="hidden sm:block text-[10px] sm:text-xs text-white/90 max-w-[110px] truncate">
+                    <div className="text-[11px] sm:text-xs font-semibold text-gray-700 dark:text-white">{<EffectIcon type={sq.effect.type} />}</div>
+                    <div className="hidden sm:block text-[10px] sm:text-xs text-gray-700 dark:text-white/90 max-w-[110px] truncate">
                       <span className="font-medium">{sq.effect.type}</span>
-                      {sq.effect.desc && <span className="text-white/70"> · {sq.effect.desc}</span>}
+                      {sq.effect.desc && <span className="text-gray-600 dark:text-white/70"> · {sq.effect.desc}</span>}
                     </div>
 
                     {/* モバイルでは簡潔にタイプのみ */}
-                    <div className="block sm:hidden text-[10px] text-white/90">{sq.effect.type}</div>
+                    <div className="block sm:hidden text-[10px] text-gray-700 dark:text-white/90">{sq.effect.type}</div>
                   </div>
                 )}
               </div>
@@ -125,18 +125,18 @@ export default function GameBoard({
                       </div>
                     ))
                   ) : (
-                    <div className="text-[11px] text-white/40">—</div>
+                    <div className="text-[11px] text-gray-400 dark:text-white/40">—</div>
                   )}
                 </div>
 
                 {/* 右端に小さなインジケータ（任意） */}
-                <div className="text-[10px] sm:text-xs text-white/60">{/* ここにコイン数など表示可 */}</div>
+                <div className="text-[10px] sm:text-xs text-gray-500 dark:text-white/60">{/* ここにコイン数など表示可 */}</div>
               </div>
 
               {/* マス下部に小さな詳細（幅が小さいとtruncate） */}
               {sq.effect?.desc && (
                 <div className="mt-2">
-                  <div className="text-[10px] sm:text-xs text-white/70 truncate">{sq.effect.desc}</div>
+                  <div className="text-[10px] sm:text-xs text-gray-600 dark:text-white/70 truncate">{sq.effect.desc}</div>
                 </div>
               )}
 

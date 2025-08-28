@@ -21,7 +21,7 @@ export default function Page() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
+    <div className="min-h-screen bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-800 text-black dark:text-white">
       <div className="container mx-auto py-6 px-4">
         <GameHeader
           currentPlayer={gameState.players[gameState.currentPlayerIndex]}

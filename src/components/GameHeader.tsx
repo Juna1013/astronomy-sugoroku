@@ -2,6 +2,7 @@
 import React from 'react';
 import DiceRoller from './DiceRoller';
 import { Player } from '../types';
+import { ThemeSwitcher } from './ThemeSwitcher';
 
 interface GameHeaderProps {
   currentPlayer: Player | undefined;
@@ -22,12 +23,13 @@ const GameHeader: React.FC<GameHeaderProps> = ({
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
       <div className="flex items-center gap-4">
         <h2 className="text-xl md:text-2xl font-bold">ゲーム画面</h2>
-        <div className="text-sm text-white/80">
+        <div className="text-sm text-gray-600 dark:text-white/80">
           Turn: <span className="font-semibold">{currentPlayer?.name ?? '—'}</span>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
+        <ThemeSwitcher />
         <div>
           <DiceRoller
             onRoll={onRoll}
