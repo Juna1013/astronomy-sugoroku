@@ -1,3 +1,4 @@
+// src/hooks/useGameState.ts の更新版
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -17,6 +18,13 @@ export interface GameState {
   started: boolean;
 }
 
+// ポップアップ用の新しい状態追加
+export interface PopupState {
+  show: boolean;
+  square: Square | null;
+  playerName: string;
+}
+
 export const useGameState = () => {
   const [started, setStarted] = useState(false);
   const [isPCMode, setIsPCMode] = useState(false);
@@ -28,6 +36,13 @@ export const useGameState = () => {
   const [diceValue, setDiceValue] = useState(1);
   const [isRolling, setIsRolling] = useState(false);
   const [lastEvent, setLastEvent] = useState<GameEvent | null>(null);
+  
+  // ポップアップ状態
+  const [popupState, setPopupState] = useState<PopupState>({
+    show: false,
+    square: null,
+    playerName: ''
+  });
 
   const lastIndex = demoSquares.length - 1;
 
@@ -63,15 +78,35 @@ export const useGameState = () => {
     return next;
   }, [lastIndex]);
 
+  // ポップアップを表示する関数
+  const showSquarePopup = useCallback((square: Square, playerName: string) => {
+    setPopupState({
+      show: true,
+      square,
+      playerName
+    });
+  }, []);
+
+  // ポップアップを閉じる関数
+  const hideSquarePopup = useCallback(() => {
+    setPopupState({
+      show: false,
+      square: null,
+      playerName: ''
+    });
+  }, []);
+
   const applySquareEffect = useCallback((plSnapshot: Player[], playerIdx: number): Player[] => {
     const player = plSnapshot[playerIdx];
     const sq = demoSquares[player.pos] as Square;
     const nextPlayers = plSnapshot.map((p) => ({ ...p }));
 
+    // ポップアップを表示
+    showSquarePopup(sq, player.name);
+
     if (sq.effect?.type === 'move' && typeof sq.effect.value === 'number') {
       nextPlayers[playerIdx].pos = Math.max(0, Math.min(nextPlayers[playerIdx].pos + sq.effect.value, lastIndex));
       
-      // Set event for UI feedback
       setLastEvent({
         type: sq.effect.value > 0 ? 'bonus' : 'penalty',
         message: sq.effect.desc || `${sq.effect.value > 0 ? '+' : ''}${sq.effect.value} マス移動`,
@@ -92,7 +127,7 @@ export const useGameState = () => {
     }
 
     return nextPlayers;
-  }, [lastIndex]);
+  }, [lastIndex, showSquarePopup]);
 
   const handleStart = useCallback((pcMode: boolean = false) => {
     setIsPCMode(pcMode);
@@ -106,7 +141,8 @@ export const useGameState = () => {
     setLastEvent(null);
     setDiceValue(1);
     setIsRolling(false);
-  }, []);
+    hideSquarePopup();
+  }, [hideSquarePopup]);
 
   const processPlayerTurn = useCallback(async (playerIndex: number, rollValue: number) => {
     return new Promise<void>((resolve) => {
@@ -132,12 +168,13 @@ export const useGameState = () => {
           return afterEffect;
         }
 
-        setTimeout(() => {
+        // ポップアップが表示されている間は次のターンに進まない
+        const nextTurnDelay = setTimeout(() => {
           const nextIdx = (playerIndex + 1) % afterEffect.length;
           setCurrentPlayerIdx(nextIdx);
           setDiceDisabled(false);
           resolve();
-        }, 1000);
+        }, 2000); // ポップアップ表示時間を考慮
 
         return afterEffect;
       });
@@ -153,7 +190,6 @@ export const useGameState = () => {
     setIsRolling(true);
     setLastEvent(null);
 
-    // Dice animation delay
     setTimeout(async () => {
       setIsRolling(false);
       await processPlayerTurn(currentPlayerIdx, rollValue);
@@ -170,7 +206,8 @@ export const useGameState = () => {
     setLastEvent(null);
     setDiceValue(1);
     setIsRolling(false);
-  }, []);
+    hideSquarePopup();
+  }, [hideSquarePopup]);
 
   const handlePlayAgain = useCallback(() => {
     handleStart(isPCMode);
@@ -181,7 +218,7 @@ export const useGameState = () => {
     if (!started || gameEnded || players.length === 0) return;
     
     const currentPlayer = players[currentPlayerIdx];
-    if (!currentPlayer?.isPC || diceDisabled) return;
+    if (!currentPlayer?.isPC || diceDisabled || popupState.show) return;
 
     const pcTurnTimeout = setTimeout(async () => {
       const pcRoll = Math.floor(Math.random() * 6) + 1;
@@ -196,7 +233,7 @@ export const useGameState = () => {
     }, 1500);
 
     return () => clearTimeout(pcTurnTimeout);
-  }, [started, gameEnded, players, currentPlayerIdx, diceDisabled, processPlayerTurn]);
+  }, [started, gameEnded, players, currentPlayerIdx, diceDisabled, processPlayerTurn, popupState.show]);
 
   const gameState: GameState = {
     players,
@@ -211,11 +248,13 @@ export const useGameState = () => {
 
   return {
     gameState,
+    popupState,
     demoSquares: demoSquares as Square[],
     handleStart,
     handleRoll,
     handleReturn,
     handlePlayAgain,
+    hideSquarePopup,
     resetGame: handleReturn,
   };
 };

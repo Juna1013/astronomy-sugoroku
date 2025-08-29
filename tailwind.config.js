@@ -1,3 +1,4 @@
+// tailwind.config.js の更新版
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -7,6 +8,9 @@ module.exports = {
   darkMode: ['class'],
   theme: {
     extend: {
+      screens: {
+        'xs': '475px', // 追加: 小さなモバイル端末用
+      },
       colors: {
         space: {
           50: '#f6f8fb',

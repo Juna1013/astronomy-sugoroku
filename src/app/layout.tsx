@@ -17,6 +17,28 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "宇宙すごろく - Space Sugoroku",
   description: "宇宙を冒険するすごろくゲーム",
+  openGraph: {
+    title: "宇宙すごろく - Space Sugoroku",
+    description: "宇宙を冒険するすごろくゲーム",
+    url: "https://astronomy-sugoroku.vercel.app",
+    siteName: "宇宙すごろく - Space Sugoroku",
+    images: [
+      {
+        url: "https://your-app.vercel.app/og-image.png", // ←public/og-image.png を置く
+        width: 1200,
+        height: 630,
+        alt: "宇宙すごろくのサムネイル",
+      },
+    ],
+    locale: "ja_JP",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "宇宙すごろく - Space Sugoroku",
+    description: "宇宙を冒険するすごろくゲーム",
+    images: ["https://astronomy.vercel.app/og-image.png"], // 同じく差し替え
+  },
 };
 
 export default function RootLayout({
@@ -40,9 +62,7 @@ export default function RootLayout({
           <div className="star-layer mid" />
           <div className="star-layer big" />
           <SpaceBackground />
-          <div className="app-content relative z-10">
-            {children}
-          </div>
+          <div className="app-content relative z-10">{children}</div>
         </ThemeProvider>
       </body>
     </html>
