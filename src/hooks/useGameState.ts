@@ -66,7 +66,7 @@ export const useGameState = () => {
   const applySquareEffect = useCallback((plSnapshot: Player[], playerIdx: number): Player[] => {
     const player = plSnapshot[playerIdx];
     const sq = demoSquares[player.pos] as Square;
-    let nextPlayers = plSnapshot.map((p) => ({ ...p }));
+    const nextPlayers = plSnapshot.map((p) => ({ ...p }));
 
     if (sq.effect?.type === 'move' && typeof sq.effect.value === 'number') {
       nextPlayers[playerIdx].pos = Math.max(0, Math.min(nextPlayers[playerIdx].pos + sq.effect.value, lastIndex));

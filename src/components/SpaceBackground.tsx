@@ -51,7 +51,7 @@ const SpaceBackground: React.FC = () => {
       ctx.fillRect(0, 0, w, h);
 
       // Draw stars
-      for (let s of stars) {
+      for (const s of stars) {
         s.x += s.vx * s.z;
         s.y += Math.sin((s.x + s.y) * 0.0005) * 0.2;
         if (s.x > w + 50) s.x = -50;
