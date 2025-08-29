@@ -1,16 +1,22 @@
 // src/components/SpaceBackground.tsx
+'use client';
+
 import React, { useRef, useEffect } from 'react';
 
 const SpaceBackground: React.FC = () => {
-  const ref = useRef<HTMLCanvasElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const canvas = ref.current!;
-    const ctx = canvas.getContext('2d')!;
-    let w = (canvas.width = window.innerWidth);
-    let h = (canvas.height = window.innerHeight);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let w = canvas.width = window.innerWidth;
+    let h = canvas.height = window.innerHeight;
     const starsCount = Math.floor((w * h) / 7000);
-    let stars: { x:number;y:number;z:number;vx:number }[] = [];
+    let stars: { x: number; y: number; z: number; vx: number }[] = [];
 
     function init() {
       stars = [];
@@ -19,29 +25,32 @@ const SpaceBackground: React.FC = () => {
           x: Math.random() * w,
           y: Math.random() * h,
           z: 0.2 + Math.random() * 1,
-          vx: 0.1 + Math.random() * 0.4
+          vx: 0.1 + Math.random() * 0.4,
         });
       }
     }
     init();
 
     function onResize() {
+      if (!canvas) return;
       w = canvas.width = window.innerWidth;
       h = canvas.height = window.innerHeight;
       init();
     }
-    window.addEventListener('resize', onResize);
 
     let raf = 0;
     function draw() {
+      if (!ctx) return;
       ctx.clearRect(0, 0, w, h);
-      // 背景（うっすら暗めのグラデ）
+      
+      // Background gradient
       const g = ctx.createLinearGradient(0, 0, 0, h);
       g.addColorStop(0, 'rgba(6,10,30,0.6)');
       g.addColorStop(1, 'rgba(2,6,20,0.95)');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
 
+      // Draw stars
       for (let s of stars) {
         s.x += s.vx * s.z;
         s.y += Math.sin((s.x + s.y) * 0.0005) * 0.2;
@@ -56,6 +65,8 @@ const SpaceBackground: React.FC = () => {
     }
     draw();
 
+    window.addEventListener('resize', onResize);
+
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', onResize);
@@ -64,9 +75,9 @@ const SpaceBackground: React.FC = () => {
 
   return (
     <canvas
-      ref={ref}
-      className="pointer-events-none fixed inset-0 z-2"
-      aria-hidden
+      ref={canvasRef}
+      className="pointer-events-none fixed inset-0 z-0"
+      aria-hidden="true"
     />
   );
 };

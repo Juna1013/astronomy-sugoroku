@@ -1,10 +1,10 @@
 'use client';
 import React from 'react';
-import Dashboard from '../../src/components/Dashboard';
-import GameBoard from '../../src/components/GameBoard';
-import GameHeader from '../../src/components/GameHeader';
-import GameOverModal from '../../src/components/GameOverModal';
-import { useGameState } from '../../src/hooks/useGameState';
+import Dashboard from '@/components/Dashboard';
+import GameBoard from '@/components/GameBoard';
+import GameHeader from '@/components/GameHeader';
+import GameOverModal from '@/components/GameOverModal';
+import { useGameState } from '@/hooks/useGameState';
 
 export default function Page() {
   const {
@@ -17,11 +17,18 @@ export default function Page() {
   } = useGameState();
 
   if (!gameState.started) {
-    return <Dashboard onStart={handleStart} onOpenSettings={() => alert('設定ダイアログ')} />;
+    return (
+      <div className="min-h-screen relative">
+        <Dashboard 
+          onStart={handleStart} 
+          onOpenSettings={() => alert('設定ダイアログ（開発中）')} 
+        />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-800 text-black dark:text-white">
+    <div className="min-h-screen relative">
       <div className="container mx-auto py-6 px-4">
         <GameHeader
           currentPlayer={gameState.players[gameState.currentPlayerIndex]}

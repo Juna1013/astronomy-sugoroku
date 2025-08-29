@@ -4,10 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Player, Square } from '../types';
 import demoSquares from '../data/squares.json';
 
-// This is a placeholder for the actual event type from utils
 export type GameEvent = { type: string; message: string; value: number };
 
-// Re-defining GameState as expected by GameControls
 export interface GameState {
   players: Player[];
   currentPlayerIndex: number;
@@ -33,16 +31,16 @@ export const useGameState = () => {
 
   const lastIndex = demoSquares.length - 1;
 
-  const initPlayers = (pcMode: boolean) => {
+  const initPlayers = (pcMode: boolean): Player[] => {
     if (pcMode) {
       return [
-        { id: 1, name: 'You', pos: 0, color: '#ef4444', isPC: false },
-        { id: 2, name: 'PC', pos: 0, color: '#3b82f6', isPC: true },
+        { id: 1, name: 'あなた', pos: 0, color: '#ef4444', isPC: false },
+        { id: 2, name: 'AI', pos: 0, color: '#3b82f6', isPC: true },
       ];
     } else {
       return [
-        { id: 1, name: 'A', pos: 0, color: '#ef4444', isPC: false },
-        { id: 2, name: 'B', pos: 3, color: '#10b981', isPC: false },
+        { id: 1, name: 'プレイヤー1', pos: 0, color: '#ef4444', isPC: false },
+        { id: 2, name: 'プレイヤー2', pos: 0, color: '#10b981', isPC: false },
       ];
     }
   };
@@ -51,6 +49,7 @@ export const useGameState = () => {
     setWinner(winnerPlayer);
     setGameEnded(true);
     setDiceDisabled(true);
+    setIsRolling(false);
   }, []);
 
   const checkGoal = useCallback((pl: Player[]) => {
@@ -58,20 +57,40 @@ export const useGameState = () => {
     return w ?? null;
   }, [lastIndex]);
 
-  const movePlayerBy = useCallback((pl: Player[], idx: number, steps: number) => {
+  const movePlayerBy = useCallback((pl: Player[], idx: number, steps: number): Player[] => {
     const next = pl.map((p) => ({ ...p }));
-    next[idx].pos = Math.min(next[idx].pos + steps, lastIndex);
+    next[idx].pos = Math.max(0, Math.min(next[idx].pos + steps, lastIndex));
     return next;
   }, [lastIndex]);
 
-  const applySquareEffectSync = useCallback((plSnapshot: Player[], playerIdx: number) => {
+  const applySquareEffect = useCallback((plSnapshot: Player[], playerIdx: number): Player[] => {
     const player = plSnapshot[playerIdx];
-    const sq = demoSquares[player.pos];
+    const sq = demoSquares[player.pos] as Square;
     let nextPlayers = plSnapshot.map((p) => ({ ...p }));
 
     if (sq.effect?.type === 'move' && typeof sq.effect.value === 'number') {
-      nextPlayers[playerIdx].pos = Math.min(nextPlayers[playerIdx].pos + sq.effect.value, lastIndex);
+      nextPlayers[playerIdx].pos = Math.max(0, Math.min(nextPlayers[playerIdx].pos + sq.effect.value, lastIndex));
+      
+      // Set event for UI feedback
+      setLastEvent({
+        type: sq.effect.value > 0 ? 'bonus' : 'penalty',
+        message: sq.effect.desc || `${sq.effect.value > 0 ? '+' : ''}${sq.effect.value} マス移動`,
+        value: sq.effect.value
+      });
+    } else if (sq.effect?.type === 'bonus') {
+      setLastEvent({
+        type: 'bonus',
+        message: sq.effect.desc || 'ボーナス効果発動！',
+        value: 0
+      });
+    } else if (sq.effect?.type === 'penalty') {
+      setLastEvent({
+        type: 'penalty',
+        message: sq.effect.desc || 'ペナルティ効果発動',
+        value: 0
+      });
     }
+
     return nextPlayers;
   }, [lastIndex]);
 
@@ -84,79 +103,62 @@ export const useGameState = () => {
     setDiceDisabled(false);
     setGameEnded(false);
     setWinner(null);
+    setLastEvent(null);
+    setDiceValue(1);
+    setIsRolling(false);
   }, []);
 
-  const handleRoll = useCallback(() => {
+  const processPlayerTurn = useCallback(async (playerIndex: number, rollValue: number) => {
+    return new Promise<void>((resolve) => {
+      setPlayers(prevPlayers => {
+        const snapshot = prevPlayers.map(p => ({ ...p }));
+        const moved = movePlayerBy(snapshot, playerIndex, rollValue);
+        
+        const maybeWinner = checkGoal(moved);
+        if (maybeWinner) {
+          setPlayers(moved);
+          endGame(maybeWinner);
+          resolve();
+          return moved;
+        }
+
+        const afterEffect = applySquareEffect(moved, playerIndex);
+        setPlayers(afterEffect);
+
+        const finalWinner = checkGoal(afterEffect);
+        if (finalWinner) {
+          endGame(finalWinner);
+          resolve();
+          return afterEffect;
+        }
+
+        setTimeout(() => {
+          const nextIdx = (playerIndex + 1) % afterEffect.length;
+          setCurrentPlayerIdx(nextIdx);
+          setDiceDisabled(false);
+          resolve();
+        }, 1000);
+
+        return afterEffect;
+      });
+    });
+  }, [movePlayerBy, checkGoal, endGame, applySquareEffect]);
+
+  const handleRoll = useCallback(async () => {
     if (diceDisabled || gameEnded || !started) return;
 
-    const value = Math.floor(Math.random() * 6) + 1;
-    setDiceValue(value);
+    const rollValue = Math.floor(Math.random() * 6) + 1;
+    setDiceValue(rollValue);
     setDiceDisabled(true);
     setIsRolling(true);
+    setLastEvent(null);
 
-    // Short delay to show dice animation
-    setTimeout(() => {
+    // Dice animation delay
+    setTimeout(async () => {
       setIsRolling(false);
-
-      const snapshot = players.map((p) => ({ ...p }));
-      const moved = movePlayerBy(snapshot, currentPlayerIdx, value);
-      setPlayers(moved);
-
-      const maybeWinner = checkGoal(moved);
-      if (maybeWinner) {
-        endGame(maybeWinner);
-        return;
-      }
-
-      const afterEffect = applySquareEffectSync(moved, currentPlayerIdx);
-      setPlayers(afterEffect);
-
-      const maybeWinner2 = checkGoal(afterEffect);
-      if (maybeWinner2) {
-        endGame(maybeWinner2);
-        return;
-      }
-
-      const nextIdx = (currentPlayerIdx + 1) % afterEffect.length;
-      setCurrentPlayerIdx(nextIdx);
-
-      if (afterEffect[nextIdx]?.isPC) {
-        setTimeout(() => {
-          if (gameEnded) return;
-          setDiceDisabled(true);
-          const pcRoll = Math.floor(Math.random() * 6) + 1;
-          setDiceValue(pcRoll);
-          setPlayers((prevPlayers) => {
-            const snapped = prevPlayers.map((p) => ({ ...p }));
-            const afterPc = movePlayerBy(snapped, nextIdx, pcRoll);
-            const w = checkGoal(afterPc);
-            if (w) {
-              setPlayers(afterPc);
-              endGame(w);
-              return afterPc;
-            }
-
-            const afterPcEffect = applySquareEffectSync(afterPc, nextIdx);
-            const w2 = checkGoal(afterPcEffect);
-            setPlayers(afterPcEffect);
-            if (w2) {
-              endGame(w2);
-              return afterPcEffect;
-            }
-
-            const following = (nextIdx + 1) % afterPcEffect.length;
-            setCurrentPlayerIdx(following);
-            setDiceDisabled(false);
-            return afterPcEffect;
-          });
-        }, 800);
-      } else {
-        setTimeout(() => {
-          if (!gameEnded) setDiceDisabled(false);
-        }, 250);
-      }
-    }, 500); // Corresponds to dice animation
-  }, [diceDisabled, gameEnded, started, players, currentPlayerIdx, movePlayerBy, checkGoal, endGame, applySquareEffectSync]);
+      await processPlayerTurn(currentPlayerIdx, rollValue);
+    }, 800);
+  }, [diceDisabled, gameEnded, started, currentPlayerIdx, processPlayerTurn]);
 
   const handleReturn = useCallback(() => {
     setStarted(false);
@@ -165,42 +167,36 @@ export const useGameState = () => {
     setGameEnded(false);
     setWinner(null);
     setDiceDisabled(false);
+    setLastEvent(null);
+    setDiceValue(1);
+    setIsRolling(false);
   }, []);
 
   const handlePlayAgain = useCallback(() => {
     handleStart(isPCMode);
   }, [handleStart, isPCMode]);
 
+  // PC Player turn handling
   useEffect(() => {
-    if (!started || gameEnded || players.length === 0 || !players[0].isPC) return;
+    if (!started || gameEnded || players.length === 0) return;
+    
+    const currentPlayer = players[currentPlayerIdx];
+    if (!currentPlayer?.isPC || diceDisabled) return;
 
-    setDiceDisabled(true);
-    setTimeout(() => {
-      if (gameEnded) return;
+    const pcTurnTimeout = setTimeout(async () => {
       const pcRoll = Math.floor(Math.random() * 6) + 1;
       setDiceValue(pcRoll);
-      setPlayers((prevPlayers) => {
-        const snapped = prevPlayers.map((p) => ({ ...p }));
-        const afterPc = movePlayerBy(snapped, 0, pcRoll);
-        const w = checkGoal(afterPc);
-        if (w) {
-          setPlayers(afterPc);
-          endGame(w);
-          return afterPc;
-        }
-        const afterPcEffect = applySquareEffectSync(afterPc, 0);
-        const w2 = checkGoal(afterPcEffect);
-        setPlayers(afterPcEffect);
-        if (w2) {
-          endGame(w2);
-          return afterPcEffect;
-        }
-        setCurrentPlayerIdx(1 % afterPcEffect.length);
-        setDiceDisabled(false);
-        return afterPcEffect;
-      });
-    }, 800);
-  }, [started, gameEnded, players, movePlayerBy, checkGoal, endGame, applySquareEffectSync]);
+      setDiceDisabled(true);
+      setIsRolling(true);
+
+      setTimeout(async () => {
+        setIsRolling(false);
+        await processPlayerTurn(currentPlayerIdx, pcRoll);
+      }, 1200);
+    }, 1500);
+
+    return () => clearTimeout(pcTurnTimeout);
+  }, [started, gameEnded, players, currentPlayerIdx, diceDisabled, processPlayerTurn]);
 
   const gameState: GameState = {
     players,
@@ -215,7 +211,7 @@ export const useGameState = () => {
 
   return {
     gameState,
-    demoSquares,
+    demoSquares: demoSquares as Square[],
     handleStart,
     handleRoll,
     handleReturn,
