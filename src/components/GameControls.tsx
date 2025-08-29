@@ -46,7 +46,7 @@ const GameControls: React.FC<GameControlsProps> = ({
               <div className={cn('w-4 h-4 rounded-full', player.color)} />
               <div>
                 <h3 className="font-semibold text-gray-800">{player.name}</h3>
-                <p className="text-sm text-gray-600">位置: {player.position}</p>
+                <p className="text-sm text-gray-600">位置: {player.pos}</p>
               </div>
             </div>
           </motion.div>
