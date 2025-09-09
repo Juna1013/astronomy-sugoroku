@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { Home, Dice6, Menu } from 'lucide-react';
 import DiceRoller from './DiceRoller';
 import { Player } from '../types';
-import { ThemeSwitcher } from './ThemeSwitcher';
 
 interface GameHeaderProps {
   currentPlayer: Player | undefined;
@@ -14,6 +13,8 @@ interface GameHeaderProps {
   diceDisabled: boolean;
   onReturn: () => void;
   gameEnded: boolean;
+  diceValue?: number;
+  isRolling?: boolean;
 }
 
 const GameHeader: React.FC<GameHeaderProps> = ({
@@ -22,6 +23,8 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   diceDisabled,
   onReturn,
   gameEnded,
+  diceValue,
+  isRolling,
 }) => {
   // Keyboard shortcut for dice roll
   useEffect(() => {
@@ -54,10 +57,6 @@ const GameHeader: React.FC<GameHeaderProps> = ({
         </motion.div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden sm:block">
-            <ThemeSwitcher />
-          </div>
-          
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -77,7 +76,34 @@ const GameHeader: React.FC<GameHeaderProps> = ({
           <div className="text-sm sm:text-base text-white/80">
             現在のプレイヤー: <span className="font-semibold text-white">{currentPlayer?.name || '—'}</span>
             {currentPlayer?.isPC && <span className="ml-1 text-blue-300 text-xs sm:text-sm">(AI)</span>}
+            {currentPlayer?.restTurns && currentPlayer.restTurns > 0 && (
+              <span className="ml-2 text-red-300 text-xs sm:text-sm">
+                💤 {currentPlayer.restTurns}回休み
+              </span>
+            )}
           </div>
+          {/* Moving status */}
+          {(isRolling || (diceDisabled && diceValue && !gameEnded)) && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-1 text-xs sm:text-sm text-blue-300"
+            >
+              {isRolling ? (
+                <span className="animate-pulse">🎲 サイコロ転がり中...</span>
+              ) : diceValue ? (
+                <span className="flex items-center gap-1">
+                  ⚡ {diceValue}マス移動中...
+                  <motion.span
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  >
+                    ✨
+                  </motion.span>
+                </span>
+              ) : null}
+            </motion.div>
+          )}
         </div>
 
         {/* Dice controls */}
@@ -85,6 +111,9 @@ const GameHeader: React.FC<GameHeaderProps> = ({
           <DiceRoller
             onRoll={onRoll}
             disabled={(currentPlayer?.isPC ?? false) || diceDisabled || gameEnded}
+            diceValue={diceValue}
+            isRolling={isRolling}
+            showResult={!isRolling && diceValue > 0 && diceDisabled}
             label={
               currentPlayer?.isPC 
                 ? `${currentPlayer?.name} 思考中...` 
@@ -96,10 +125,6 @@ const GameHeader: React.FC<GameHeaderProps> = ({
         </div>
       </div>
 
-      {/* Theme switcher for mobile */}
-      <div className="sm:hidden flex justify-center pt-2 border-t border-white/10">
-        <ThemeSwitcher />
-      </div>
     </div>
   );
 };

@@ -12,4 +12,9 @@ export type Player = {
   pos: number;
   color?: string;
   isPC?: boolean;
+  restTurns?: number;
+  restReason?: string;
+  curseTurns?: number;
+  confusionTurns?: number;
+  lastPos?: number;
 };

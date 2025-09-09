@@ -4,7 +4,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Rocket, Settings, Users, Bot } from 'lucide-react';
-import { ThemeSwitcher } from './ThemeSwitcher';
 
 interface DashboardProps {
   onStart: (pcMode?: boolean) => void;
@@ -14,10 +13,6 @@ interface DashboardProps {
 export default function Dashboard({ onStart, onOpenSettings }: DashboardProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 relative">
-      {/* Header with theme switcher */}
-      <div className="absolute top-4 sm:top-6 right-4 sm:right-6 z-20">
-        <ThemeSwitcher />
-      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}

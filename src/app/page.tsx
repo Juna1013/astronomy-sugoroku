@@ -1,4 +1,3 @@
-// src/app/page.tsx の更新版
 'use client';
 import React from 'react';
 import Dashboard from '@/components/Dashboard';
@@ -6,12 +5,16 @@ import GameBoard from '@/components/GameBoard';
 import GameHeader from '@/components/GameHeader';
 import GameOverModal from '@/components/GameOverModal';
 import SquareEffectPopup from '@/components/SquareEffectPopup';
+import DiceResultEffect from '@/components/DiceResultEffect';
+import RestEffect from '@/components/RestEffect';
 import { useGameState } from '@/hooks/useGameState';
 
 export default function Page() {
   const {
     gameState,
     popupState,
+    diceResultState,
+    restEffectState,
     demoSquares,
     handleStart,
     handleRoll,
@@ -40,6 +43,8 @@ export default function Page() {
           diceDisabled={gameState.isRolling || !gameState.started || popupState.show}
           onReturn={handleReturn}
           gameEnded={gameState.isGameOver}
+          diceValue={gameState.diceValue}
+          isRolling={gameState.isRolling}
         />
 
         <GameBoard
@@ -55,6 +60,19 @@ export default function Page() {
         playerName={popupState.playerName}
         show={popupState.show}
         onClose={hideSquarePopup}
+      />
+
+      <DiceResultEffect
+        diceValue={diceResultState.value}
+        show={diceResultState.show}
+        playerName={diceResultState.playerName}
+      />
+
+      <RestEffect
+        show={restEffectState.show}
+        playerName={restEffectState.playerName}
+        restTurns={restEffectState.restTurns}
+        restReason={restEffectState.restReason}
       />
 
       <GameOverModal
