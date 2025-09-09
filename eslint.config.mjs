@@ -1,4 +1,3 @@
-import '@rushstack/eslint-patch/modern-module-resolution';
 import tseslint from 'typescript-eslint';
 import nextPlugin from 'eslint-config-next';
 import prettierConfig from 'eslint-config-prettier';

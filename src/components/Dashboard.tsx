@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Rocket, Settings, Users, Bot, Zap, Star, Flame } from 'lucide-react';
+import { Rocket, Settings, Bot, Zap, Star, Flame } from 'lucide-react';
 import { DifficultyLevel } from '@/hooks/useGameState';
 
 interface DashboardProps {
@@ -157,16 +157,6 @@ export default function Dashboard({ onStart, onOpenSettings }: DashboardProps) {
 
           {/* Additional Options */}
           <div className="mt-4 space-y-2">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onStart(false, selectedDifficulty)}
-              className="w-full group relative overflow-hidden bg-white/10 hover:bg-white/20 border border-white/30 text-white font-medium py-3 px-4 rounded-xl shadow-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm"
-            >
-              <Users className="w-4 h-4" />
-              <span>2人で対戦</span>
-            </motion.button>
-
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}

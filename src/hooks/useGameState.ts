@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Player, Square } from '../types';
+import { Player, Square } from '@/types';
 import demoSquaresHard from '../data/squares-hard.json';
 import demoSquaresEasy from '../data/squares-easy.json';
 import demoSquaresNormal from '../data/squares-normal.json';

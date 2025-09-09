@@ -3,21 +3,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-
-type Square = {
-  id: number;
-  name: string;
-  effect?: { type: string; value?: number; desc?: string };
-  icon?: string;
-};
-
-type Player = {
-  id: number;
-  name: string;
-  pos: number;
-  color?: string;
-  isPC?: boolean;
-};
+import { Square, Player } from "@/types";
 
 type Props = {
   squares: Square[];

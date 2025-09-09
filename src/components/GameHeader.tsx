@@ -83,7 +83,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
             )}
           </div>
           {/* Moving status */}
-          {(isRolling || (diceDisabled && diceValue && !gameEnded)) && (
+          {(isRolling || (diceDisabled && (diceValue ?? 0) > 0 && !gameEnded)) && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -91,7 +91,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
             >
               {isRolling ? (
                 <span className="animate-pulse">🎲 サイコロ転がり中...</span>
-              ) : diceValue ? (
+              ) : (diceValue ?? 0) > 0 ? (
                 <span className="flex items-center gap-1">
                   ⚡ {diceValue}マス移動中...
                   <motion.span
@@ -113,7 +113,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
             disabled={(currentPlayer?.isPC ?? false) || diceDisabled || gameEnded}
             diceValue={diceValue}
             isRolling={isRolling}
-            showResult={!isRolling && diceValue > 0 && diceDisabled}
+            showResult={!isRolling && (diceValue ?? 0) > 0 && diceDisabled}
             label={
               currentPlayer?.isPC 
                 ? `${currentPlayer?.name} 思考中...` 
