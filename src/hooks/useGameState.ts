@@ -3,7 +3,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Player, Square } from '../types';
-import demoSquares from '../data/squares.json';
+import demoSquaresHard from '../data/squares-hard.json';
+import demoSquaresEasy from '../data/squares-easy.json';
+import demoSquaresNormal from '../data/squares-normal.json';
+
+export type DifficultyLevel = 'easy' | 'normal' | 'hard';
 
 export type GameEvent = { type: string; message: string; value: number };
 
@@ -28,6 +32,7 @@ export interface PopupState {
 export const useGameState = () => {
   const [started, setStarted] = useState(false);
   const [isPCMode, setIsPCMode] = useState(false);
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('normal');
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0);
   const [diceDisabled, setDiceDisabled] = useState(false);
@@ -59,6 +64,21 @@ export const useGameState = () => {
     restReason: ''
   });
 
+  // 難易度に応じたマスデータを取得
+  const getCurrentSquares = useCallback(() => {
+    switch (difficulty) {
+      case 'easy':
+        return demoSquaresEasy as Square[];
+      case 'normal':
+        return demoSquaresNormal as Square[];
+      case 'hard':
+        return demoSquaresHard as Square[];
+      default:
+        return demoSquaresNormal as Square[];
+    }
+  }, [difficulty]);
+
+  const demoSquares = getCurrentSquares();
   const lastIndex = demoSquares.length - 1;
 
   const initPlayers = (pcMode: boolean): Player[] => {
@@ -659,8 +679,9 @@ export const useGameState = () => {
     return nextPlayers;
   }, [lastIndex, showSquarePopup, demoSquares]);
 
-  const handleStart = useCallback((pcMode: boolean = false) => {
+  const handleStart = useCallback((pcMode: boolean = false, selectedDifficulty: DifficultyLevel = 'normal') => {
     setIsPCMode(pcMode);
+    setDifficulty(selectedDifficulty);
     const initial = initPlayers(pcMode);
     setPlayers(initial);
     setCurrentPlayerIdx(0);
@@ -821,8 +842,8 @@ export const useGameState = () => {
   }, [hideSquarePopup]);
 
   const handlePlayAgain = useCallback(() => {
-    handleStart(isPCMode);
-  }, [handleStart, isPCMode]);
+    handleStart(isPCMode, difficulty);
+  }, [handleStart, isPCMode, difficulty]);
 
   // PC Player turn handling
   useEffect(() => {
@@ -882,6 +903,7 @@ export const useGameState = () => {
     diceResultState,
     restEffectState,
     demoSquares: demoSquares as Square[],
+    difficulty,
     handleStart,
     handleRoll,
     handleReturn,

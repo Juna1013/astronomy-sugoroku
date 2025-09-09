@@ -7,7 +7,7 @@ import GameOverModal from '@/components/GameOverModal';
 import SquareEffectPopup from '@/components/SquareEffectPopup';
 import DiceResultEffect from '@/components/DiceResultEffect';
 import RestEffect from '@/components/RestEffect';
-import { useGameState } from '@/hooks/useGameState';
+import { useGameState, DifficultyLevel } from '@/hooks/useGameState';
 
 export default function Page() {
   const {
