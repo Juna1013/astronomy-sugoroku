@@ -178,16 +178,16 @@ export default function Dashboard({ onStart, onOpenSettings }: DashboardProps) {
         </div>
       </motion.div>
 
-      {/* Floating elements - レスポンシブ対応 */}
+      {/* Floating elements - 軽量化 */}
       <motion.div
         animate={{ 
-          y: [-10, 10, -10],
-          rotate: [0, 5, 0, -5, 0]
+          y: [-8, 8, -8],
+          rotate: [0, 10, 0]
         }}
         transition={{ 
-          duration: 8,
+          duration: 6,
           repeat: Infinity,
-          ease: "easeInOut"
+          ease: "linear"
         }}
         className="absolute top-1/4 left-1/4 text-xl sm:text-2xl opacity-20 sm:opacity-30"
       >
@@ -196,13 +196,12 @@ export default function Dashboard({ onStart, onOpenSettings }: DashboardProps) {
 
       <motion.div
         animate={{ 
-          y: [10, -10, 10],
-          rotate: [0, -5, 0, 5, 0]
+          y: [8, -8, 8]
         }}
         transition={{ 
-          duration: 6,
+          duration: 4,
           repeat: Infinity,
-          ease: "easeInOut",
+          ease: "linear",
           delay: 1
         }}
         className="absolute bottom-1/4 right-1/4 text-xl sm:text-2xl opacity-20 sm:opacity-30"
@@ -212,13 +211,12 @@ export default function Dashboard({ onStart, onOpenSettings }: DashboardProps) {
 
       <motion.div
         animate={{ 
-          y: [-5, 5, -5],
-          x: [-5, 5, -5]
+          x: [-6, 6, -6]
         }}
         transition={{ 
-          duration: 10,
+          duration: 8,
           repeat: Infinity,
-          ease: "easeInOut",
+          ease: "linear",
           delay: 2
         }}
         className="absolute top-1/3 right-1/3 text-lg sm:text-xl opacity-15 sm:opacity-20"

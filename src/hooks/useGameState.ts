@@ -1,7 +1,7 @@
 // src/hooks/useGameState.ts の更新版
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Player, Square } from '@/types';
 import demoSquaresHard from '../data/squares-hard.json';
 import demoSquaresEasy from '../data/squares-easy.json';
@@ -64,8 +64,8 @@ export const useGameState = () => {
     restReason: ''
   });
 
-  // 難易度に応じたマスデータを取得
-  const getCurrentSquares = useCallback(() => {
+  // 難易度に応じたマスデータを取得（useMemoで最適化）
+  const demoSquares = useMemo(() => {
     switch (difficulty) {
       case 'easy':
         return demoSquaresEasy as Square[];
@@ -77,9 +77,7 @@ export const useGameState = () => {
         return demoSquaresNormal as Square[];
     }
   }, [difficulty]);
-
-  const demoSquares = getCurrentSquares();
-  const lastIndex = demoSquares.length - 1;
+  const lastIndex = useMemo(() => demoSquares.length - 1, [demoSquares]);
 
   const initPlayers = (pcMode: boolean): Player[] => {
     if (pcMode) {
@@ -128,7 +126,7 @@ export const useGameState = () => {
           remainingSteps--;
           
           if (remainingSteps > 0 && currentPlayers[idx].pos < lastIndex && currentPlayers[idx].pos > 0) {
-            setTimeout(moveOneStep, 300); // 300msごとに1マス移動
+            setTimeout(moveOneStep, 150); // 150msごとに1マス移動（高速化）
           } else {
             resolve(currentPlayers);
           }
@@ -137,7 +135,7 @@ export const useGameState = () => {
         }
       };
 
-      setTimeout(moveOneStep, 100); // 初回の移動まで少し待機
+      setTimeout(moveOneStep, 50); // 初回の移動まで少し待機（短縮）
     });
   }, [lastIndex]);
 
@@ -162,10 +160,18 @@ export const useGameState = () => {
   const applySquareEffect = useCallback((plSnapshot: Player[], playerIdx: number): Player[] => {
     const player = plSnapshot[playerIdx];
     const sq = demoSquares[player.pos] as Square;
-    const nextPlayers = plSnapshot.map((p) => ({ ...p }));
+    // shallow copyの代わりにspread operatorでより軽量化
+    const nextPlayers = [...plSnapshot];
 
     // ポップアップを表示
     showSquarePopup(sq, player.name);
+    
+    // AIプレイヤーの場合は自動でポップアップを閉じる
+    if (player.isPC) {
+      setTimeout(() => {
+        hideSquarePopup();
+      }, 1500); // 1.5秒後に自動で閉じる
+    }
 
     if (!sq.effect) return nextPlayers;
 
@@ -677,7 +683,7 @@ export const useGameState = () => {
     }
 
     return nextPlayers;
-  }, [lastIndex, showSquarePopup, demoSquares]);
+  }, [lastIndex, showSquarePopup, hideSquarePopup, demoSquares]);
 
   const handleStart = useCallback((pcMode: boolean = false, selectedDifficulty: DifficultyLevel = 'normal') => {
     setIsPCMode(pcMode);
@@ -747,7 +753,7 @@ export const useGameState = () => {
           setCurrentPlayerIdx(nextIdx);
           setDiceDisabled(false);
           resolve();
-        }, 2000); // ポップアップ表示時間を考慮
+        }, 1200); // ポップアップ表示時間を短縮
       } catch (error) {
         console.error('Turn processing error:', error);
         setDiceDisabled(false);
@@ -818,12 +824,12 @@ export const useGameState = () => {
         playerName: currentPlayerName
       });
 
-      // 1.5秒後にエフェクトを非表示にして移動開始
+      // 0.8秒後にエフェクトを非表示にして移動開始（高速化）
       setTimeout(async () => {
         setDiceResultState({ show: false, value: 0, playerName: '' });
         await processPlayerTurn(currentPlayerIdx, rollValue);
-      }, 1500);
-    }, 800);
+      }, 800);
+    }, 400);
   }, [diceDisabled, gameEnded, started, currentPlayerIdx, processPlayerTurn, players, checkAndHandleRest]);
 
   const handleReturn = useCallback(() => {
@@ -875,12 +881,12 @@ export const useGameState = () => {
           playerName: currentPlayerName
         });
 
-        // 1.5秒後にエフェクトを非表示にして移動開始
+        // 0.8秒後にエフェクトを非表示にして移動開始（高速化）
         setTimeout(async () => {
           setDiceResultState({ show: false, value: 0, playerName: '' });
           await processPlayerTurn(currentPlayerIdx, pcRoll);
-        }, 1500);
-      }, 1200);
+        }, 800);
+      }, 600);
     }, 1500);
 
     return () => clearTimeout(pcTurnTimeout);

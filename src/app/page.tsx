@@ -1,13 +1,15 @@
 'use client';
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import Dashboard from '@/components/Dashboard';
 import GameBoard from '@/components/GameBoard';
 import GameHeader from '@/components/GameHeader';
-import GameOverModal from '@/components/GameOverModal';
-import SquareEffectPopup from '@/components/SquareEffectPopup';
-import DiceResultEffect from '@/components/DiceResultEffect';
-import RestEffect from '@/components/RestEffect';
 import { useGameState, DifficultyLevel } from '@/hooks/useGameState';
+
+// Heavy components を lazy load
+const GameOverModal = lazy(() => import('@/components/GameOverModal'));
+const SquareEffectPopup = lazy(() => import('@/components/SquareEffectPopup'));
+const DiceResultEffect = lazy(() => import('@/components/DiceResultEffect'));
+const RestEffect = lazy(() => import('@/components/RestEffect'));
 
 export default function Page() {
   const {
@@ -55,31 +57,39 @@ export default function Page() {
         />
       </div>
 
-      <SquareEffectPopup
-        square={popupState.square}
-        playerName={popupState.playerName}
-        show={popupState.show}
-        onClose={hideSquarePopup}
-      />
+      <Suspense fallback={null}>
+        <SquareEffectPopup
+          square={popupState.square}
+          playerName={popupState.playerName}
+          show={popupState.show}
+          onClose={hideSquarePopup}
+        />
+      </Suspense>
 
-      <DiceResultEffect
-        diceValue={diceResultState.value}
-        show={diceResultState.show}
-        playerName={diceResultState.playerName}
-      />
+      <Suspense fallback={null}>
+        <DiceResultEffect
+          diceValue={diceResultState.value}
+          show={diceResultState.show}
+          playerName={diceResultState.playerName}
+        />
+      </Suspense>
 
-      <RestEffect
-        show={restEffectState.show}
-        playerName={restEffectState.playerName}
-        restTurns={restEffectState.restTurns}
-        restReason={restEffectState.restReason}
-      />
+      <Suspense fallback={null}>
+        <RestEffect
+          show={restEffectState.show}
+          playerName={restEffectState.playerName}
+          restTurns={restEffectState.restTurns}
+          restReason={restEffectState.restReason}
+        />
+      </Suspense>
 
-      <GameOverModal
-        winner={gameState.winner}
-        onReturn={handleReturn}
-        onPlayAgain={handlePlayAgain}
-      />
+      <Suspense fallback={null}>
+        <GameOverModal
+          winner={gameState.winner}
+          onReturn={handleReturn}
+          onPlayAgain={handlePlayAgain}
+        />
+      </Suspense>
     </div>
   );
 }

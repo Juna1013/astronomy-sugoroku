@@ -1,7 +1,7 @@
 // src/components/GameBoard.tsx の改善版
 'use client';
 
-import React from "react";
+import React, { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Square, Player } from "@/types";
 
@@ -75,7 +75,7 @@ function EffectIcon({ type }: { type?: string }) {
   return <span aria-hidden="true">{icons[type as keyof typeof icons] || "★"}</span>;
 }
 
-function PlayerToken({ player, isActive }: { player: Player; isActive?: boolean }) {
+const PlayerToken = memo(function PlayerToken({ player, isActive }: { player: Player; isActive?: boolean }) {
   const label = player.name.slice(0, 2);
   const isResting = player.restTurns && player.restTurns > 0;
   const isCursed = player.curseTurns && player.curseTurns > 0;
@@ -189,16 +189,26 @@ function PlayerToken({ player, isActive }: { player: Player; isActive?: boolean 
       ) : null}
     </div>
   );
-}
+});
 
-export default function GameBoard({
+const GameBoard = memo(function GameBoard({
   squares,
   players,
   started = true,
   currentPlayerId,
   onSquareClick,
 }: Props) {
-  const playersOn = (sqId: number) => players.filter((p) => p.pos === sqId);
+  // メモ化で同じsqIdに対する計算を避ける
+  const playersPositionMap = useMemo(() => {
+    const map = new Map<number, Player[]>();
+    players.forEach(player => {
+      const existing = map.get(player.pos) || [];
+      map.set(player.pos, [...existing, player]);
+    });
+    return map;
+  }, [players]);
+  
+  const playersOn = (sqId: number) => playersPositionMap.get(sqId) || [];
 
   return (
     <div className="p-2 xs:p-3 sm:p-4">
@@ -325,4 +335,6 @@ export default function GameBoard({
       </div>
     </div>
   );
-}
+});
+
+export default GameBoard;

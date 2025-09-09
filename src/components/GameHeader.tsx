@@ -1,7 +1,7 @@
 // src/components/GameHeader.tsx の改善版
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, memo } from 'react';
 import { motion } from 'framer-motion';
 import { Home, Dice6, Menu } from 'lucide-react';
 import DiceRoller from './DiceRoller';
@@ -17,7 +17,7 @@ interface GameHeaderProps {
   isRolling?: boolean;
 }
 
-const GameHeader: React.FC<GameHeaderProps> = ({
+const GameHeader = memo<GameHeaderProps>(({
   currentPlayer,
   onRoll,
   diceDisabled,
@@ -127,6 +127,6 @@ const GameHeader: React.FC<GameHeaderProps> = ({
 
     </div>
   );
-};
+});
 
 export default GameHeader;
